@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the color module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function cloudmersiveantivirus_requirements($phase) {
+
+  $requirements = array();
+  // Report Drupal version.
+  if ($phase == 'runtime') {
+    $config = new Config();
+    $scan_mode = variable_get('scanMode', 1);
+
+    switch ($scan_mode) {
+      case Config::MODE_DAEMON:
+        $scanner = new DaemonTCPIP($config);
+        break;
+
+      case Config::MODE_EXECUTABLE:
+        $scanner = new Executable($config);
+        break;
+
+      case Config::MODE_UNIX_SOCKET:
+        $scanner = new DaemonUnixSocket($config);
+        break;
+    }
+
+    if ($version = $scanner->version()) {
+
+      $requirements['cloudmersiveantivirus'] = array(
+        'title' => t('CloudmersiveAntivirus version'),
+        'value' => $scanner->version(),
+        'severity' => REQUIREMENT_INFO,
+      );
+    }
+    else {
+      $requirements['cloudmersiveantivirus'] = array(
+        'title' => t('CloudmersiveAntivirus version'),
+        'value' => t('Unable to connect to CloudmersiveAntivirus service.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}

@@ -1,0 +1,66 @@
+<?php
+
+/**
+ * @file
+ * File uploads using the Cloudmersive Anti-virus APIs.
+ */
+
+define('CLOUDMERSIVEANTIVIRUS_OUTAGE_BLOCK_UNCHECKED', 0);
+define('CLOUDMERSIVEANTIVIRUS_OUTAGE_ALLOW_UNCHECKED', 1);
+
+/**
+ * Implements hook_menu().
+ */
+function cloudmersiveantivirus_menu() {
+  $items['admin/config/media/cloudmersiveantivirus'] = array(
+    'title' => 'Cloudmersive Anti-virus Scanner',
+    'description' => "Configuration for cloudmersive antivirus",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cloud_mersive_antivirus_admin_form'),
+    'access arguments' => array('access administration pages'),
+    'file' => 'cloudmersiveantivirus.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_file_validate().
+ */
+function cloudmersiveantivirus_file_validate($file) {
+
+  $errors = array();
+  $scanner = Scanner::isEnabled();
+  $scannable = Scanner::isScannable($file);
+  $verbosemode = Scanner::isVerboseModeEnabled();
+
+  if ($scanner && $scannable) {
+    if ($verbosemode) {
+      $filename = $file->filename;
+      watchdog('Cloudmersive Antivirus', 'File %filename is scannable.', array('@filename' => $filename), WATCHDOG_WARNING);
+    }
+
+    $result = Scanner::scan($file);
+    switch ($result) {
+      // File is infected.
+      case Scanner::FILE_IS_INFECTED:
+        $errors[] = t('A virus has been detected in the file. The file will be deleted.');
+        break;
+
+      case Scanner::FILE_IS_UNCHECKED:
+        // Check whether unscanned files are permitted.
+        if (!$scanner->allowUncheckedFiles()) {
+          $errors[] = t('The anti-virus scanner could not check the file, so the file cannot be uploaded. Contact the site administrator if this problem persists.');
+        }
+        break;
+    }
+  }
+  // In verbose mode, log files that were not checked.
+  elseif ($verbosemode) {
+    $filename = $file->filename;
+    watchdog('Cloudmersive Antivirus', 'Uploaded file %filename was not checked, and was uploaded without checking.', array('%filename' => $filename), WATCHDOG_INFO);
+  }
+
+  return $errors;
+}

@@ -1,0 +1,11 @@
+name = Cloudmersive Anti-Virus
+description = Automatic scanning of file uploads using the Cloudmersive Anti-virus APIs.
+package = Anti-virus
+core = 7.x
+files[] = src/Config.php
+files[] = src/DaemonTCPIP.php
+files[] = src/DaemonUnixSocket.php
+files[] = src/Executable.php
+files[] = src/Scanner.php
+dependencies[] = xautoload
+configure = admin/config/media/cloudmersiveantivirus
