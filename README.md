@@ -14,7 +14,7 @@ Prerequisites
 
 This module requires a Cloudmersive Antivirus service.
 
-Sign up for a free API key at https://cloudmersive.com - free keys include 50,000 API calls/month.
+Sign up for a free API key at https://cloudmersive.com - free keys include 800 API calls/month.
 
 
 Setup
